@@ -1,11 +1,12 @@
 /*!
  * TeacupJS Seed - Seed file providing methods to init a new TeacupJS sandbox. 
  * 
- * @projectDescription TeacupJS is the prototype of a JavaScript library for [Bancha CMS](http://getbancha.com/home)
- * @author             Marco Solazzi
- * @license            (c) 2011-2012 - Marco Solazzi
- * @version            0.1a - December 2011 - Initial setup, no docs and just a couple of random tests...
- * @requires 	       RequireJS 1.0+
+ * @projectDescription  TeacupJS is the prototype of a JavaScript library for [Bancha CMS](http://getbancha.com/home)
+ * @author              Marco Solazzi
+ * @copyright           (c) 2011-2012 - Marco Solazzi
+ * @license             GNU/GPL (General Public License)
+ * @version             0.1a - December 2011 - Initial setup, no docs and just a couple of random tests...
+ * @requires 	        RequireJS 1.0+
  */
 
 

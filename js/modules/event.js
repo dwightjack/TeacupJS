@@ -1,3 +1,4 @@
+//taken from https://github.com/jeromeetienne/microevent.js
 define({
 	
 	bind	: function(event, fct){
