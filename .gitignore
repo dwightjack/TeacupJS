@@ -9,3 +9,4 @@
 .svn
 _svn
 svn-commit*.tmp
+.project
