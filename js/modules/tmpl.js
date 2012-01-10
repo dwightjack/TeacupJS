@@ -1,4 +1,4 @@
-define(['libs/when', 'mod/dom', 'libs/mustache'], function (when) {
+define(['libs/when', 'mod/dom' ,'libs/mustache'], function (when) {
 	
 	return function () {
 		

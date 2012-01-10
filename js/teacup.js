@@ -32,6 +32,7 @@ var Teacup = (function (root, doc, undefined) {
 	var _TeacupConfig,
 		_Teacup,
 		_merge,
+		_indexOf,
 		_cupUid = 1;
 	
 	/**
@@ -50,7 +51,7 @@ var Teacup = (function (root, doc, undefined) {
 			//some default libraries
 			'underscore' : 'libs/underscore',
 			'jquery' : 'libs/jquery-1.7.1'
-		}//,
+		}
 		//priority : ['underscore', 'jquery'] //default libraries
 	};
 	
@@ -109,6 +110,36 @@ var Teacup = (function (root, doc, undefined) {
 		return mix;
 	}
 	
+	/**
+	 * Returns the position of a given value in an array starting from `0`, else `-1`
+	 * Uses native `Array.prototype.indexOf` where available
+	 * 
+	 * @function
+	 * @private
+	 * @param {Mixed} value Value to seach for
+	 * @param {Array} array Array to search in 
+	 * @return {Number}
+	 * 
+	 * var myArray = ['cat', 'dog', 'bird', 'fish'];
+	 * 
+	 * _indexOf('cat', myArray);
+	 * // returns 1
+	 * _indexOf('tiger', myArray);
+	 * // returns -1
+	 */
+	function _indexOf ( elem, array ) {
+		if ( array.indexOf ) {
+			return array.indexOf( elem );
+		}
+
+		for ( var i = 0, length = array.length; i < length; i++ ) {
+			if ( array[ i ] === elem ) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
     /**
      * @exports _Teacup as Teacup
      * @scope Teacup
@@ -119,6 +150,8 @@ var Teacup = (function (root, doc, undefined) {
          * A centralized list of every sandbox instance
          */
 		_sandboxes : [],
+		
+		_modules : ['dom', 'event', 'tmpl', 'base'], //known modules
 		
         /**
          * Initializes a new sandbox instance. For every new instance a new RequireJS context is created with id `'cup_XX'` where `XX` is a number.
@@ -153,15 +186,14 @@ var Teacup = (function (root, doc, undefined) {
 							_TeacupConfig, 
 							config, 
 							{ context :  ctx } 
-					);
-					
+					);	
 			this.require = require.config(config);
 			
 			depsLen = deps.length;
 			//parse module deps
 			while (depsLen--) {
 				dep = deps[depsLen];
-				if (dep.indexOf('/') === -1 && !(dep in config.paths)) {
+				if (dep.indexOf('/') === -1 && _indexOf(dep, _Teacup._modules) !== -1) {
 					deps[depsLen] = dep = ('mod/' + dep);
 					modList.push(dep);					
 				}
@@ -185,7 +217,26 @@ var Teacup = (function (root, doc, undefined) {
 			
 			this.require(deps, cb);
 			
-		}
+		}//,
+		/*
+		setModule : function (name, modDeps, libDeps, def) {
+			var deps = ['require'],
+				i = 0,
+				modDepsL = modDeps.length;
+			
+			//parsing module deps
+			for (; i < modDepsL; i++) {
+				deps.push('mod/' + modDeps[i]); 
+			}
+			//external deps
+			deps = deps.concat(libDeps);
+			
+			//save this as a knwon module
+			_Teacup._modules.push(name);
+			
+			//define AMD module
+			root.define(deps, def);
+		}*/
 		
 	};
 	
