@@ -27,33 +27,13 @@ function (C) { //sandbox
 /**
  * @namespace Teacup
  */
-var Teacup = (function (root, doc, undefined) {
+var Teacup = (function (root, doc, Config, undefined) {
 	
 	var _TeacupConfig,
 		_Teacup,
 		_merge,
 		_indexOf,
 		_cupUid = 1;
-	
-	/**
-	 * Default config
-     * 
-     * @see http://requirejs.org/docs/api.html#config
-	 */
-	_TeacupConfig = {
-		baseUrl : '/js',
-		paths : {
-			'mod' : 'modules',
-			'libs' : 'libs',
-			'tmpl' : '/tmpl',
-			'order' : 'libs/require/order', //RequireJS order! plugin
-			'text' : 'libs/require/text', //RequireJS text! plugin
-			//some default libraries
-			'underscore' : 'libs/underscore',
-			'jquery' : 'libs/jquery-1.7.1'
-		}
-		//priority : ['underscore', 'jquery'] //default libraries
-	};
 	
     /**
 	 * Merges the contents of two or more objects together into a new object.
@@ -140,6 +120,26 @@ var Teacup = (function (root, doc, undefined) {
 		return -1;
 	}
 	
+	/**
+	 * Default config
+     * 
+     * @see http://requirejs.org/docs/api.html#config
+	 */
+	_TeacupConfig = _merge({
+		baseUrl : '/js',
+		paths : {
+			'mod' : 'modules',
+			'libs' : 'libs',
+			'tmpl' : '/tmpl',
+			'order' : 'libs/require/order', //RequireJS order! plugin
+			'text' : 'libs/require/text', //RequireJS text! plugin
+			//some default libraries
+			'underscore' : 'libs/underscore',
+			'jquery' : 'libs/jquery-1.7.1'
+		}
+		//priority : ['underscore', 'jquery'] //default libraries
+	}, Config.require || {});
+	
     /**
      * @exports _Teacup as Teacup
      * @scope Teacup
@@ -151,7 +151,7 @@ var Teacup = (function (root, doc, undefined) {
          */
 		_sandboxes : [],
 		
-		_modules : ['dom', 'event', 'tmpl', 'base'], //known modules
+		_modules : ['dom', 'event', 'tmpl', 'base'].concat(Config.modules || []), //known modules
 		
         /**
          * Initializes a new sandbox instance. For every new instance a new RequireJS context is created with id `'cup_XX'` where `XX` is a number.
@@ -243,4 +243,4 @@ var Teacup = (function (root, doc, undefined) {
 	
 	return _Teacup; //return the public API
 	
-})(this, this.document);
+})(this, this.document, Teacup || {});
