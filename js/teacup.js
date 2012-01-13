@@ -217,16 +217,19 @@ var Teacup = (function (root, doc, Config, undefined) {
 			
 			this.require(deps, cb);
 			
-		}//,
-		/*
-		setModule : function (name, modDeps, libDeps, def) {
-			var deps = ['require'],
+		},
+		setModule : function (name, deps, def) {
+			var depsArray = deps || [],
 				i = 0,
-				modDepsL = modDeps.length;
+				depsArrayL = depsArray.length,
+				dep;
 			
 			//parsing module deps
-			for (; i < modDepsL; i++) {
-				deps.push('mod/' + modDeps[i]); 
+			for (; i < depsArrayL; i++) {
+				dep = depsArray[i];
+				if (dep.indexOf('/') === -1 && _indexOf(dep, _Teacup._modules) !== -1) {
+					depsArray[i] = 'mod/' + dep;
+				}
 			}
 			//external deps
 			deps = deps.concat(libDeps);
@@ -236,7 +239,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 			
 			//define AMD module
 			root.define(deps, def);
-		}*/
+		}
 		
 	};
 	
