@@ -1,4 +1,4 @@
-define(['jquery'], function (jQuery) {
+Teacup.setModule('dom', ['jquery'], function (jQuery) {
 
 	return {
 		

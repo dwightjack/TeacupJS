@@ -1,9 +1,13 @@
-define(['libs/when', 'mod/dom' ,'libs/mustache'], function (when) {
+Teacup.setModule('tmpl', ['libs/when', 'dom' ,'libs/mustache'], function (when, Dom) {
 	
 	return function () {
 		
 		var _Tmpl,
 			inst = this; //Teacup instance
+		
+		this.extend(Dom);
+		
+		console.log(this);
 			
 		_Tmpl = function (view) {
 			var _tmpl = this,

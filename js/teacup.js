@@ -1,11 +1,12 @@
 /*!
- * TeacupJS Seed - Seed file providing methods to init a new TeacupJS sandbox. 
+ * TeacupJS Seed - Seed file providing common methods of the Teacup Sandbox. 
  * 
  * @projectDescription  TeacupJS is the prototype of a JavaScript library for [Bancha CMS](http://getbancha.com/home)
  * @author              Marco Solazzi
  * @copyright           (c) 2011-2012 - Marco Solazzi
  * @license             GNU/GPL (General Public License)
  * @version             0.1a - December 2011 - Initial setup, no docs and just a couple of random tests...
+ * @version             0.1a2 - March 2012 - Updated and rewritten
  * @requires 	        RequireJS 1.0+
  */
 
@@ -32,8 +33,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 	var _TeacupConfig,
 		_Teacup,
 		_merge,
-		_indexOf,
-		_cupUid = 1;
+		_indexOf;
 	
     /**
 	 * Merges the contents of two or more objects together into a new object.
@@ -73,11 +73,12 @@ var Teacup = (function (root, doc, Config, undefined) {
 	 * newObj.obj.barbar === true
 	 */
 	_merge = function() {
-		var mix = {}, deep = (typeof arguments[0] == 'boolean');
+		var mix, deep = (typeof arguments[0] == 'boolean');
 		if (deep) {
 			arguments[0] = {};
 		}
-		for (var i = 0; i < arguments.length; i++) {
+		mix = arguments[0];
+		for (var i = 1; i < arguments.length; i++) {
 			for (var property in arguments[i]) {
 				var ap = arguments[i][property];
 				var mp = mix[property];
@@ -125,7 +126,7 @@ var Teacup = (function (root, doc, Config, undefined) {
      * 
      * @see http://requirejs.org/docs/api.html#config
 	 */
-	_TeacupConfig = _merge({
+	_TeacupConfig = _.defaults(Config.loader || {}, {
 		baseUrl : '/js',
 		paths : {
 			'mod' : 'modules',
@@ -138,7 +139,9 @@ var Teacup = (function (root, doc, Config, undefined) {
 			'jquery' : 'libs/jquery-1.7.1'
 		}
 		//priority : ['underscore', 'jquery'] //default libraries
-	}, Config.require || {});
+	});
+	
+	
 	
     /**
      * @exports _Teacup as Teacup
@@ -151,97 +154,62 @@ var Teacup = (function (root, doc, Config, undefined) {
          */
 		_sandboxes : [],
 		
-		_modules : ['dom', 'event', 'tmpl', 'base'].concat(Config.modules || []), //known modules
+		_modules : 'dom|event|tmpl|base'.split('|').concat(Config.modules || []), //known modules
 		
-        /**
-         * Initializes a new sandbox instance. For every new instance a new RequireJS context is created with id `'cup_XX'` where `XX` is a number.
-         * 
-         * @param {Object} [config] Instance config. See [RequireJS config API](http://requirejs.org/docs/api.html#config) for reference. This parameter may be omitted.
-         * @param {Array} [deps] Modules to load. It accepts Teacup modules ('dom', 'util' or 'mod/dom', 'mod/util') as well as libraries ('jquery', 'underscore')
-         * @param {Function} [callback] Callback function. The first argument is the sandox instance. A second optianl parameter is a RequireJS reference
-         */
-		fill : function (config, deps, callback) {
-			
-			var inst = this,
-				cb,
-				modList = [],
-				depsLen,
-				dep,
-				ctx;
-			
-			if (arguments.length === 2) {
-				callback = deps;
-				deps = config;
-				config = {};
-			}
-			
-			if (!(this instanceof _Teacup.fill)) {
-				return new _Teacup.fill(config, deps, callback);
-			}
-			
-			this.context = ctx = 'cup_' + (_cupUid++);
-			
-			//build the teacup require context
-			config = _merge(true, 
-							_TeacupConfig, 
-							config, 
-							{ context :  ctx } 
-					);	
-			this.require = require.config(config);
-			
-			depsLen = deps.length;
-			//parse module deps
-			while (depsLen--) {
-				dep = deps[depsLen];
-				if (dep.indexOf('/') === -1 && _indexOf(dep, _Teacup._modules) !== -1) {
-					deps[depsLen] = dep = ('mod/' + dep);
-					modList.push(dep);					
-				}
-			}
-			
-			deps.unshift('require');
-			
-			cb = function (require) {
-				
-				var modListLen = modList.length,
-					mod;
-				
-				while (modListLen--) {
-					mod = require(modList[modListLen]);
-					inst = _merge(inst, (typeof mod === 'function' ? mod.call(inst) : mod) || {});
-				}
-				callback(inst, require);
-				
-				_Teacup._sandboxes.push(inst);
-			};
-			
-			this.require(deps, cb);
-			
+        addModule : function (name, constructor) {
+			_Teacup._modules[name] = constructor;	
 		},
-		setModule : function (name, deps, def) {
-			var depsArray = deps || [],
-				i = 0,
-				depsArrayL = depsArray.length,
-				dep;
+
+		module : function (name, opts) {
+			var mod = Teacup.modules[name],
+				inst;
 			
-			//parsing module deps
-			for (; i < depsArrayL; i++) {
-				dep = depsArray[i];
-				if (dep.indexOf('/') === -1 && _indexOf(dep, _Teacup._modules) !== -1) {
-					depsArray[i] = 'mod/' + dep;
-				}
+			inst = mod.call(null, opts);
+			if (inst.initialize) {
+				inst.initialize.call(inst, opts);
 			}
-			//external deps
-			deps = deps.concat(libDeps);
-			
-			//save this as a knwon module
-			_Teacup._modules.push(name);
-			
-			//define AMD module
-			root.define(deps, def);
+			return inst;
 		}
-		
 	};
+	
+	
+	
+	_Teacup.addModule('load', function (opts) {
+		
+		var _conf = _.defaults(opts || {}, {
+				baseUrl : '/js',
+				paths : {
+					'mod' : 'modules',
+					'libs' : 'libs',
+					'tmpl' : '/tmpl',
+					'order' : 'libs/require/order', //RequireJS order! plugin
+					'text' : 'libs/require/text', //RequireJS text! plugin
+					//some default libraries
+					'underscore' : 'libs/underscore',
+					'jquery' : 'libs/jquery-1.7.1'
+				}
+				//priority : ['underscore', 'jquery'] //default libraries
+			}),
+			ctx;
+			
+			_conf.context = 'laoder' + (+new Date);
+			
+			ctx = require.config(_conf);
+			
+		
+		return {
+			
+			initialize : function () {
+			},
+			
+			require : function (deps, cb) {
+				ctx.require(deps, cb);
+			}
+			
+		};
+	});
+	
+	
 	
 	
 	return _Teacup; //return the public API
