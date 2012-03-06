@@ -126,7 +126,7 @@ var Teacup = (function (root, doc, Config, undefined) {
      * 
      * @see http://requirejs.org/docs/api.html#config
 	 */
-	_TeacupConfig = _.defaults(Config.loader || {}, {
+	_TeacupConfig = _merge(true, {
 		baseUrl : '/js',
 		paths : {
 			'mod' : 'modules',
@@ -139,7 +139,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 			'jquery' : 'libs/jquery-1.7.1'
 		}
 		//priority : ['underscore', 'jquery'] //default libraries
-	});
+	}, Config.loader || {});
 	
 	
 	
@@ -176,20 +176,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 	
 	_Teacup.addModule('load', function (opts) {
 		
-		var _conf = _.defaults(opts || {}, {
-				baseUrl : '/js',
-				paths : {
-					'mod' : 'modules',
-					'libs' : 'libs',
-					'tmpl' : '/tmpl',
-					'order' : 'libs/require/order', //RequireJS order! plugin
-					'text' : 'libs/require/text', //RequireJS text! plugin
-					//some default libraries
-					'underscore' : 'libs/underscore',
-					'jquery' : 'libs/jquery-1.7.1'
-				}
-				//priority : ['underscore', 'jquery'] //default libraries
-			}),
+		var _conf = _merge(true, {}, _TeacupConfig, opts || {}),
 			ctx;
 			
 			_conf.context = 'laoder' + (+new Date);
