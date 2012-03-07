@@ -32,7 +32,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 	
 	var _TeacupConfig,
 		_Teacup,
-		_merge,
+		_extend,
 		_indexOf;
 	
     /**
@@ -59,7 +59,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 	 * 	}
 	 * };
 	 * 
-	 * var newObj = _merge(firstObj, secondObj);
+	 * var newObj = _extend(firstObj, secondObj);
 	 * 
 	 * newObj.baz === true
 	 * newObj.foo === 'no bar'
@@ -67,12 +67,12 @@ var Teacup = (function (root, doc, Config, undefined) {
 	 * newObj.obj.barbar === undefined
 	 * 
 	 * //deep copy nested objects
-	 * var newObj = _merge(true, firstObj, secondObj);
+	 * var newObj = _extend(true, firstObj, secondObj);
 	 * 
 	 * newObj.obj.foobar === null
 	 * newObj.obj.barbar === true
 	 */
-	_merge = function() {
+	_extend = function() {
 		var mix, deep = (typeof arguments[0] == 'boolean');
 		if (deep) {
 			arguments[0] = {};
@@ -83,7 +83,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 				var ap = arguments[i][property];
 				var mp = mix[property];
 				if (deep && mp && typeof ap == 'object' && typeof mp == 'object') 
-					mix[property] = _merge(deep, mp, ap);
+					mix[property] = _extend(deep, mp, ap);
 				else 
 					mix[property] = ap;
 			}
@@ -126,7 +126,7 @@ var Teacup = (function (root, doc, Config, undefined) {
      * 
      * @see http://requirejs.org/docs/api.html#config
 	 */
-	_TeacupConfig = _merge(true, {
+	_TeacupConfig = _extend(true, {
 		baseUrl : '/js',
 		paths : {
 			'mod' : 'modules',
@@ -172,11 +172,122 @@ var Teacup = (function (root, doc, Config, undefined) {
 		}
 	};
 	
+	_Teacup.utils = {
+		noop : function () {},
+		extend: _extend
+		
+	};
+	
+	_Teacup.Object = {
+		create : function (o) {
+			function F () {}
+			F.prototype = o;
+			return new F();
+		}
+	};
+	
+	_Teacup.Class = (function () {
+		
+		var _extend = _Teacup.utils.extend,
+			_create = _Teacup.Object.create;
+		
+		return {
+			
+			prototype : {
+				initialize : function () {}
+			},
+			
+			create : function () {
+				var child = _create(this),
+					args = Array.prototype.slice.call(arguments || []);
+				
+				child.parent = this;
+				child.prototype = _create(this.prototype);
+				
+				
+				if (args.length > 0) {
+					args.unshift(child.prototype);
+					_extend.apply(child, args);
+				}
+				
+				child.extend =  function (o) {
+					_extend(this.prototype, o);
+				};
+				
+				return child;
+			},
+			
+			
+			init : function () {
+				var instance = _create(this.prototype);
+				
+				instance.parent = this;
+				instance.initialize.apply(instance, arguments);
+				
+				return instance;
+			}
+		};
+		
+	})();
+	
+	_Teacup.mixins = {};
+	
+	//taken from https://github.com/jeromeetienne/microevent.js
+	_Teacup.mixins.Events = {
+		bind: function(event, fct){
+			this._events = this._events || {};
+			this._events[event] = this._events[event]	|| [];
+			this._events[event].push(fct);
+		},
+	
+		unbind: function(event, fct){
+			this._events = this._events || {};
+			if( event in this._events === false  )	return;
+			this._events[event].splice(this._events[event].indexOf(fct), 1);
+		},
+	
+		trigger: function(event /* , args... */){
+			this._events = this._events || {};
+			if( event in this._events === false  )	return;
+			for(var i = 0; i < this._events[event].length; i++){
+				this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1))
+			}
+		}
+	};
 	
 	
+	//utility Event Class
+	_Teacup.Events = _Teacup.Class.create(_Teacup.mixins.Events);
+	
+	//global pubsub
+	_Teacup.pubsub = _Teacup.Events.init();
+	
+	_Teacup.Loader = _Teacup.Class.create({
+		initialize: function (opts) {
+			var _conf = _extend(true, {}, _TeacupConfig, opts || {}),
+				loader;
+			
+			_conf.context = 'loader' + (+new Date);
+			
+			loader = require.config(_conf);
+			
+			this.fill = function (deps, callback) {
+				var cb = function (require) {
+					callback.call(_Teacup, _Teacup, require);
+				}
+				deps.unshift('require');
+				
+				loader(deps, cb);
+			};
+		}
+	});
+	
+	_Teacup.load = _Teacup.Loader.init();
+	
+	 /*
 	_Teacup.addModule('load', function (opts) {
 		
-		var _conf = _merge(true, {}, _TeacupConfig, opts || {}),
+		var _conf = _extend(true, {}, _TeacupConfig, opts || {}),
 			ctx;
 			
 			_conf.context = 'laoder' + (+new Date);
@@ -187,6 +298,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 		return {
 			
 			initialize : function () {
+				
 			},
 			
 			require : function (deps, cb) {
@@ -195,8 +307,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 			
 		};
 	});
-	
-	
+	*/
 	
 	
 	return _Teacup; //return the public API

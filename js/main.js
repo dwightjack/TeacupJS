@@ -20,6 +20,7 @@
 	
 });*/
 
+/*
 Teacup.create = function (constructor) {
 	var F;
 	
@@ -125,3 +126,7 @@ Teacup.fill(['dom', 'underscore'], function (T, require) {
     $ul.appendTo('footer');
     
 });*/
+
+Teacup.load.fill(['jquery'], function (T) {
+	console.log(T);
+});
