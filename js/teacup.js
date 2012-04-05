@@ -213,7 +213,7 @@ var Teacup = (function (root, doc, Config, undefined) {
 				child.extend =  function (o) {
 					_extend(this.prototype, o);
 				};
-				
+
 				return child;
 			},
 			

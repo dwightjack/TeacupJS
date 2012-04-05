@@ -126,7 +126,25 @@ Teacup.fill(['dom', 'underscore'], function (T, require) {
     $ul.appendTo('footer');
     
 });*/
-
+/*
 Teacup.load.fill(['jquery'], function (T) {
 	console.log(T);
+});*/
+Teacup.load.fill(['mod/application'], function (T) {
+	window.app = Teacup.Application.init({
+		listeners : {
+
+			'run': function () {
+				console.log(arguments);
+			}
+		},
+
+		ready: function () {
+			this.runMe();
+		},
+
+		runMe : function () {
+			this.trigger('run', this);
+		}
+	});
 });
